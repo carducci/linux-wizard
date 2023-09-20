@@ -1,0 +1,41 @@
+# Use the latest version of the Ubuntu image
+FROM ubuntu:latest
+
+# Update the package list and install sudo
+RUN sed -i 's/# \(.*multiverse$\)/\1/g' /etc/apt/sources.list && \
+  apt-get update && \
+  apt-get -y upgrade && \
+  apt-get install -y build-essential && \
+  apt-get install -y software-properties-common && \
+  apt-get install -y byobu curl git htop man unzip vim wget sudo jq && \
+  apt-get install -y sudo 
+
+RUN yes | unminimize 
+
+RUN sudo add-apt-repository universe
+
+RUN apt-get update && \
+  apt-get -y upgrade && \
+  apt-get install -y python3-dev python3-pip python3-setuptools zsh && \
+  rm -rf /var/lib/apt/lists/*
+
+# Create a user called "wizard" with the password "nfjs" and add it to the sudo group
+RUN useradd -ms /bin/bash wizard && \
+    echo "wizard:nfjs" | chpasswd 
+RUN usermod -aG sudo wizard && echo "wizard ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/wizard
+RUN chmod 0440 /etc/sudoers.d/wizard
+
+# Use the newly created user as the default user
+USER wizard
+
+# Set default User
+USER wizard:wizard
+
+# Set environment variables. 
+ENV HOME /home/wizard
+
+# Define working directory.
+WORKDIR /home/wizard
+
+# Define default command.
+CMD ["bash"]
